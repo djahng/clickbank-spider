@@ -1,11 +1,12 @@
 const puppeteer = require('puppeteer');
+const cheerio = require('cheerio');
 
 const url = 'https://accounts.clickbank.com/marketplace.htm';
 
 const getProductDetails = async (page) => {
     const data = await parseTableData(page);
 
-    let zipped = [];
+    const zipped = [];
 
     for (i = 0; i < data.length; i += 3) {
         zipped.push({
@@ -22,7 +23,7 @@ const parseTableData = async (page) => {
     const data = await page.evaluate(() => {
         const trs = Array.from(document.querySelectorAll('#results > table > tbody:nth-child(1) > tbody > tr'))
         
-        return trs.map(tr => tr.innerHTML);
+        return trs.map(tr => tr.innerHTML.trim());
     });
 
     return data;
@@ -45,7 +46,7 @@ const parseTableData = async (page) => {
     });
     await page.goto(url, { waitUntil: 'networkidle2' });
 
-    // debugger;
+    debugger;
 
     // Go to Clickbank Marketplace
     await page.type('#includeKeywords', '');
@@ -68,10 +69,14 @@ const parseTableData = async (page) => {
         }
     );
 
-    // debugger;
+    debugger;
 
     // Get the results table data
     const productDetails = await getProductDetails(page);
+
+    const $ = cheerio.load(productDetails[5].result);
+    console.log($('span[class="recordTitle"]').text());
+    console.log($('span[class="descriptionContent"]').text());
 
     debugger;
 

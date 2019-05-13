@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const cheerio = require('cheerio');
+// const cheerio = require('cheerio');
 
 const url = 'https://accounts.clickbank.com/marketplace.htm';
 
@@ -22,7 +22,7 @@ const getProductDetails = async (page) => {
 const parseTableData = async (page) => {
     const data = await page.evaluate(() => {
         const trs = Array.from(document.querySelectorAll('#results > table > tbody:nth-child(1) > tbody > tr'))
-        
+
         return trs.map(tr => tr.innerHTML.trim());
     });
 
@@ -74,9 +74,9 @@ const parseTableData = async (page) => {
     // Get the results table data
     const productDetails = await getProductDetails(page);
 
-    const $ = cheerio.load(productDetails[5].result);
-    console.log($('span[class="recordTitle"]').text());
-    console.log($('span[class="descriptionContent"]').text());
+    // const $ = cheerio.load(productDetails[5].result);
+    // console.log($('span[class="recordTitle"]').text());
+    // console.log($('span[class="descriptionContent"]').text());
 
     debugger;
 

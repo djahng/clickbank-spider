@@ -1,6 +1,5 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-// const cheerio = require('cheerio');
 
 const url = 'https://accounts.clickbank.com/marketplace.htm';
 
@@ -32,7 +31,7 @@ const parseTableData = async (page) => {
 
 (async () => {
   const browser = await puppeteer.launch({
-    headless: true
+    headless: false
   });
 
   // Set browser properties and go to base url
@@ -45,6 +44,17 @@ const parseTableData = async (page) => {
     },
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'
   });
+
+  // Don't load image (improves speed)
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+     if (request.resourceType() === 'image') {
+         request.abort();
+     } else {
+         request.continue();
+     }
+  });
+
   await page.goto(url, { waitUntil: 'networkidle2' });
 
   debugger;
@@ -72,16 +82,45 @@ const parseTableData = async (page) => {
 
   debugger;
 
-  // Get the results table data
-  const productDetails = await getProductDetails(page);
+  // Start pagination
+  // await page.waitForSelector('tr.paginationLinks');
+  let pagination = await page.evaluate(() => {
+    return document.querySelector('td.futurePage > a.nextPage') ? true : false;
+  });
+
+  let productDetails = [];
+
+  // const currentPage = await page.evaluate(() => {
+  //   return document.querySelector('td.current').innerText;
+  // });
+
+  const totalPages = await page.evaluate(() => {
+    return document.querySelector('div.paginationSummary').innerText.split(' ')[2];
+  });
+
+  // console.log(currentPage === totalPages ? true : false);
+
+  while (pagination) {
+    // Get the results table data
+    const details = await getProductDetails(page);
+    productDetails = productDetails.concat(details);
+    console.log(productDetails);
+
+    await page.click('td.futurePage > a.nextPage');
+    await page.waitForSelector('td.current');
+
+    const currentPage = await page.evaluate(() => {
+      return document.querySelector('td.current').innerText;
+    });
+
+    pagination = currentPage !== totalPages ? true : false;
+  }
+
+
 
   const detailsJSON = JSON.stringify(productDetails, null, 2);
 
   fs.writeFile('/Users/dave/Desktop/clickbank.json', detailsJSON, err => console.log(err));
-
-  // const $ = cheerio.load(productDetails[5].result);
-  // console.log($('span[class="recordTitle"]').text());
-  // console.log($('span[class="descriptionContent"]').text());
 
   debugger;
 

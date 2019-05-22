@@ -110,7 +110,7 @@ const parseTableData = async (page) => {
 
   const detailsJSON = JSON.stringify(productDetails, null, 2);
 
-  fs.writeFile('/Users/dave/Desktop/clickbank.json', detailsJSON, err => console.log(err));
+  fs.writeFile('clickbank.json', detailsJSON, err => console.log(err));
 
   debugger;
 

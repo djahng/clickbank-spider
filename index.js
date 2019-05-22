@@ -83,28 +83,20 @@ const parseTableData = async (page) => {
   debugger;
 
   // Start pagination
-  // await page.waitForSelector('tr.paginationLinks');
   let pagination = await page.evaluate(() => {
     return document.querySelector('td.futurePage > a.nextPage') ? true : false;
   });
 
   let productDetails = [];
 
-  // const currentPage = await page.evaluate(() => {
-  //   return document.querySelector('td.current').innerText;
-  // });
-
   const totalPages = await page.evaluate(() => {
     return document.querySelector('div.paginationSummary').innerText.split(' ')[2];
   });
-
-  // console.log(currentPage === totalPages ? true : false);
 
   while (pagination) {
     // Get the results table data
     const details = await getProductDetails(page);
     productDetails = productDetails.concat(details);
-    console.log(productDetails);
 
     await page.click('td.futurePage > a.nextPage');
     await page.waitForSelector('td.current');
@@ -115,8 +107,6 @@ const parseTableData = async (page) => {
 
     pagination = currentPage !== totalPages ? true : false;
   }
-
-
 
   const detailsJSON = JSON.stringify(productDetails, null, 2);
 

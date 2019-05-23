@@ -3,6 +3,12 @@ const fs = require('fs');
 
 const url = 'https://accounts.clickbank.com/marketplace.htm';
 
+const delay = async (timeout) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, timeout);
+  })
+}
+
 const getProductDetails = async (page) => {
   const data = await parseTableData(page);
 
@@ -97,6 +103,9 @@ const parseTableData = async (page) => {
     // Get the results table data
     const details = await getProductDetails(page);
     productDetails = productDetails.concat(details);
+
+    // Throttle requests
+    await delay(1000);
 
     await page.click('td.futurePage > a.nextPage');
     await page.waitForSelector('td.current');

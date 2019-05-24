@@ -118,8 +118,14 @@ const parseTableData = async (page) => {
   }
 
   const detailsJSON = JSON.stringify(productDetails, null, 2);
+  const fileName = new Date().toISOString().split('T')[0];
 
-  fs.writeFile('clickbank.json', detailsJSON, err => console.log(err));
+  // Check if output directory exists, create if necessary
+  if (!fs.existsSync('output')) {
+    fs.mkdirSync('output');
+  }
+
+  fs.writeFile(`output/${fileName}.json`, detailsJSON, err => console.log(err));
 
   debugger;
 

@@ -3,7 +3,10 @@ const fs = require('fs');
 const { gzip } = require('node-gzip');
 
 const url = 'https://accounts.clickbank.com/marketplace.htm';
-const delayTime = 500;
+const randomizeDelayTime = true;
+const minDelay = 400;
+const maxDelay = 1500;
+const defaultDelayTime = 500;
 const headless = true;
 const compressOutputFile = true;
 
@@ -11,7 +14,11 @@ const delay = async (timeout) => {
   return new Promise(resolve => {
     setTimeout(resolve, timeout);
   })
-}
+};
+
+const randInt = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
 
 const getProductDetails = async (page) => {
   const data = await parseTableData(page);
@@ -27,7 +34,7 @@ const getProductDetails = async (page) => {
   }
 
   return zipped;
-}
+};
 
 const parseTableData = async (page) => {
   const data = await page.evaluate(() => {
@@ -37,7 +44,7 @@ const parseTableData = async (page) => {
   });
 
   return data;
-}
+};
 
 (async () => {
   const browser = await puppeteer.launch({ headless });
@@ -107,7 +114,16 @@ const parseTableData = async (page) => {
     productDetails = productDetails.concat(details);
 
     // Throttle requests
-    await delay(delayTime);
+    if (randomizeDelayTime) {
+      const delayTime = randInt(minDelay, maxDelay);
+      console.log(`Page delay: ${delayTime}`);
+
+      await delay(delayTime);
+    } else {
+      console.log(`Page delay: ${defaultDelayTime}`);
+
+      await delay(defaultDelayTime);
+    }
 
     await page.click('td.futurePage > a.nextPage');
     await page.waitForSelector('td.current');

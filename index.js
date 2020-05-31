@@ -1,7 +1,11 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const { gzip } = require('node-gzip');
 
 const url = 'https://accounts.clickbank.com/marketplace.htm';
+const delayTime = 500;
+const headless = true;
+const compressOutputFile = true;
 
 const delay = async (timeout) => {
   return new Promise(resolve => {
@@ -36,9 +40,7 @@ const parseTableData = async (page) => {
 }
 
 (async () => {
-  const browser = await puppeteer.launch({
-    headless: false
-  });
+  const browser = await puppeteer.launch({ headless });
 
   // Set browser properties and go to base url
   const page = await browser.newPage();
@@ -105,7 +107,7 @@ const parseTableData = async (page) => {
     productDetails = productDetails.concat(details);
 
     // Throttle requests
-    await delay(1000);
+    await delay(delayTime);
 
     await page.click('td.futurePage > a.nextPage');
     await page.waitForSelector('td.current');
@@ -125,7 +127,13 @@ const parseTableData = async (page) => {
     fs.mkdirSync('output');
   }
 
-  fs.writeFile(`output/${fileName}.json`, detailsJSON, err => console.log(err));
+  if (compressOutputFile) {
+    const compressed = await gzip(detailsJSON);
+
+    fs.writeFile(`output/${fileName}.json.gz`, compressed, err => console.log(err));
+  } else {
+    fs.writeFile(`output/${fileName}.json`, detailsJSON, err => console.log(err));
+  }
 
   debugger;
 
